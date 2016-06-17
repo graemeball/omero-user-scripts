@@ -42,6 +42,7 @@ job = {'par.alpha': 5000,
 TEMP = '/ngom/'  # temp data folder (shared with processor/s)
 KEEPALIVE_PULSE = 300
 RESULTS_POLL_PULSE = 6  # FIXME -- change to 60 after testing!
+TIMEOUT = 360  # FIXME -- increase afer testing!
 HOST = 'localhost'  # BlitzGateway .host says 'null' :-[
 
 
@@ -88,7 +89,7 @@ def run():
         conn = BlitzGateway(client_obj=client)
         user = str(conn.getUser().getName())
         group = str(conn.getGroupFromContext().getName())
-        SID = client.getSessionId()
+        sid = client.getSessionId()
 
         # export images (must be .dv!) to shared / temp storage
         tempdir = mktempdir(user, TEMP)
@@ -114,14 +115,18 @@ def run():
         results_filepath = os.path.join(tempdir, results_filename)
         result_count = 0  # results .json file grows as results appear
         import_count = 0  # ensure we only attempt to import each result once
-        while result_count < len(inputs):
+        tstart = time.time()
+        while result_count < len(inputs) and (time.time() - tstart) < TIMEOUT:
             time.sleep(RESULTS_POLL_PULSE)
             if os.path.exists(results_filepath):
                 with open(results_filepath, 'r') as fr:
                     results = fr.readlines()  # 1 line json string per result
                     new_results = results[import_count:]
-                    import_count += import_results(new_results, user, group, SID, conn)
+                    import_count += import_results(new_results, user, group, sid, conn)
                     result_count = len(results)
+        if result_count < len(inputs):
+            print "Job timed out after %d seconds, %d results imported" % \
+                    (TIMEOUT, import_count)
 
     finally:
         if tempdir is not None and tempdir.startswith(TEMP):
@@ -185,10 +190,12 @@ def import_results(results, user, group, sid, conn):
                 import_args = ["import", "-s", HOST, "-k", "%s" % sid]
                 import_args += ["-d", str(r['datasetID'])]
                 result_dir = os.path.split(r['result'])[0]
-                implog = os.path.join(result_dir, "import.log")  # TODO: attach?
-                import_args += ["---errs", implog, "---file", implog, r['result']]
+                plog = os.path.join(result_dir, "imports.log")
+                perr = os.path.join(result_dir, "imports.err")
+                import_args += ["---errs", plog, "---file", perr, r['result']]
                 cli.invoke(import_args, strict=True)
-                pix = int(open(implog, 'r').readlines()[0].rstrip())  # Pixels ID
+                with open(plog, 'r') as flog:
+                    pix = int(flog.readlines()[0].rstrip())  # Pixels ID
                 iid = conn.getQueryService().get("Pixels", pix).image.id.val
                 img = conn.getObject("Image", oid=iid)
                 description = "ER decon result from Image ID: %s" % r['inputID']
