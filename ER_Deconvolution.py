@@ -192,7 +192,7 @@ def import_results(results, user, group, sid, conn):
                 result_dir = os.path.split(r['result'])[0]
                 plog = os.path.join(result_dir, "imports.log")
                 perr = os.path.join(result_dir, "imports.err")
-                import_args += ["---errs", plog, "---file", perr, r['result']]
+                import_args += ["---errs", perr, "---file", plog, r['result']]
                 cli.invoke(import_args, strict=True)
                 with open(plog, 'r') as flog:
                     pix = int(flog.readlines()[0].rstrip())  # Pixels ID
