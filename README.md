@@ -110,7 +110,7 @@ Graeme Ball
 University of Dundee
 
 ###### URL ######
-https://github.com/graemeball/omero-user-scripts/blob/master/README.md
+https://github.com/graemeball/omero-user-scripts
 
 ###### Email ######
 g.ball@dundee.ac.uk
