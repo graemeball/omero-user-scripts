@@ -95,26 +95,33 @@ It will be used to help generate a landing page and links for your work.
 Please modify **all** values on **each** branch to describe your scripts.
 
 ###### Repository name ######
-Base OMERO User Scripts repository
+NGOM Processing scripts
 
 ###### Minimum version ######
-4.4
+5.2
 
 ###### Maximum version ######
-5.0
+5.2
 
 ###### Owner(s) ######
-The OME Team
+Graeme Ball
 
 ###### Institution ######
-Open Microscopy Environment
+University of Dundee
 
 ###### URL ######
-http://openmicroscopy.org/info/scripts
+https://github.com/graemeball/omero-user-scripts/blob/master/README.md
 
 ###### Email ######
-ome-devel@lists.openmicroscopy.org.uk
+g.ball@dundee.ac.uk
 
 ###### Description ######
-Example script repository to be cloned, modified, and extended.
-This text may be used on OME resources to explain your scripts.
+Processing scripts for running slow, resource-intensive jobs remotely
+(deconvolution, denoising etc.) via a shared filesystem. These OMERO
+scripts write a .json "job definition" file and import results, as they
+appear, to the same dataset as the input images. The actual processing
+is carried out separately by a daemon that watches the shared FS.
+
+In Dundee, the hardware used to run these remote processing jobs has
+been funded by an MRC Next Generation Optical Microscopy (NGOM) award
+-- hence the repository name.
