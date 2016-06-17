@@ -99,7 +99,7 @@ def run():
                 path = export_original_dvfile(conn, iid, tempdir)
                 image = conn.getObject("Image", iid)
                 fail(image is None, "No such image, ID=%d" % iid)
-                did = image.getDataset().getId()
+                did = image.getParent().getId()
                 inputs.append({'imageID': iid, 'path': path, 'datasetID': did})
             except RuntimeError as e:
                 print "Fail: " + str(e)
