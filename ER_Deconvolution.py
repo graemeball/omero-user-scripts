@@ -39,7 +39,8 @@ job = {'par.alpha': 5000,
        'par.lamf': 0.5,
        'par.niter': 25}
 
-TEMP = '/Volumes/dif/gball/ngom_test/'  # temp data folder (shared with processor/s)
+#TEMP = '/Volumes/dif/gball/ngom_test/'  # temp data folder (shared with processor/s)
+TEMP = '/ngom/'  # temp data folder (shared with processor/s)
 KEEPALIVE_PULSE = 300
 RESULTS_POLL_PULSE = 6  # FIXME -- change to 60 after testing!
 TIMEOUT = 360  # FIXME -- increase afer testing!
