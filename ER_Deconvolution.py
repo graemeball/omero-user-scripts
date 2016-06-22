@@ -147,7 +147,7 @@ def mktempdir(user, temp):
     timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
     tempdir = os.path.join(temp, user + "_" + timestamp)
     if not os.path.exists(tempdir):
-        os.makedirs(tempdir)
+        os.mkdir(tempdir)
     return tempdir
 
 
