@@ -1,25 +1,29 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+#
+# Copyright (C) 2016 Graeme Ball / Dundee Imaging Facility.
+# All rights reserved.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
 """
 ER_deconvolution.py
 
-@brief  OMERO script to run Priism ER deconvolution algorithm (remotely)
+OMERO script to run Priism ER deconvolution algorithm (remotely)
 
------------------------------------------------------------------------------
-  Copyright (C) 2016 Graeme Ball / Dundee Imaging Facility.
-
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License along
-  with this program; if not, write to the Free Software Foundation, Inc.,
-  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-------------------------------------------------------------------------------
 """
 
 import os
@@ -54,23 +58,30 @@ def run():
     """
 
     # Build GUI dialog for user to choose images & update parameters
-    client = script.client("ER_Deconvolution.py", "ER deconvolution",
-        script.String("Data_Type", optional=False,
+    client = script.client(
+        "ER_Deconvolution.py", "ER deconvolution",
+
+        script.String(
+            "Data_Type", optional=False,
             grouping="1", values=[rstring('Image')], default="Image"),
 
-        script.List("IDs", optional=False,
+        script.List(
+            "IDs", optional=False,
             description="image IDs (must have original .dv file!)",
             grouping='2').ofType(rlong(0)),
 
-        script.Int("alpha", optional=False,
+        script.Int(
+            "alpha", optional=False,
             description='regularization parameter "alpha" - try 1000-10000',
             grouping='3', default=job['par.alpha'], min=0),
 
-        script.Float("lambda f", optional=False,
+        script.Float(
+            "lambda f", optional=False,
             description='smoothing parameter "lambda f" - try 0.1-1.0',
             grouping='4', default=job['par.lamf'], min=0.0, max=1.0),
 
-        script.Int("iterations", optional=False,
+        script.Int(
+            "iterations", optional=False,
             description="number of iterations - try 10-100",
             grouping='5', default=job['par.niter'], min=0),
 
@@ -128,11 +139,12 @@ def run():
                 with open(results_filepath, 'r') as fr:
                     results = fr.readlines()  # 1 line json string per result
                     new_results = results[import_count:]
-                    import_count += import_results(new_results, user, group, sid, conn)
+                    import_count += import_results(new_results, user, group,
+                                                   sid, conn)
                     result_count = len(results)
         if result_count < len(inputs):
             print "Job timed out after %d seconds, %d results imported" % \
-                    (TIMEOUT, import_count)
+                (TIMEOUT, import_count)
 
     finally:
         if tempdir is not None and tempdir.startswith(TEMP):
@@ -162,7 +174,8 @@ def export_original_dvfile(conn, imageID, tempdir):
         if im_file.getName()[-3:] == '.dv':
             dv = im_file
     fail(dv is None, "%s has no original .dv file" % i)
-    export_path = os.path.join(tempdir, dv.getName()[:-3] + "_ID%d.dv" % imageID)
+    export_dv_name = dv.getName()[:-3] + "_ID%d.dv" % imageID
+    export_path = os.path.join(tempdir, export_dv_name)
     with open(export_path, "wb") as f:
         for chunk in dv.getFileInChunks():
             f.write(chunk)
@@ -188,7 +201,8 @@ def import_results(results, user, group, sid, conn):
         try:
             r = json.loads(result)
             if 'fail' in r:
-                print "ER decon failed for ID=%s: %s" % (r['inputID'], r['fail'])
+                print "ER decon failed for imageID=%s: %s" \
+                    % (r['inputID'], r['fail'])
             else:
                 cli = omero.cli.CLI()
                 cli.loadplugins()
@@ -204,12 +218,11 @@ def import_results(results, user, group, sid, conn):
                     pix = int(flog.readlines()[0].rstrip())  # Pixels ID
                 iid = conn.getQueryService().get("Pixels", pix).image.id.val
                 img = conn.getObject("Image", oid=iid)
-                description = "ER decon result from Image ID: %s" % r['inputID']
-                img.setDescription(description)
+                descrip = "ER decon result from Image ID: %s" % r['inputID']
+                img.setDescription(descrip)
                 # attach remaining results
                 if len(r['results']) > 1:
                     for attachment in r['results'][1:]:
-                        # TODO: if attachment path unicode, str() not robust
                         fann = conn.createFileAnnfromLocalFile(str(attachment))
                         img.linkAnnotation(fann)
                 img.save()
