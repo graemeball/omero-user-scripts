@@ -179,12 +179,11 @@ def import_results(results, user, group, sid, conn):
     """
     Import new results, print errors, return number of attempted imports
 
-    'results' is a list of json strings for dicts with keys:
+    'results' is a list of json strings representing dicts with keys:
         inputID: input Image ID
         fail: string with error message for failed processing job
         datasetID: dataset ID for this result (same as input image)
-        result: path to result to be uploaded as image file
-        attachments: list of file paths to be attached to result
+        results: 1st path uploaded as image file, all others attached
     """
     for result in results:
         try:
