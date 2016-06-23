@@ -118,7 +118,7 @@ g.ball@dundee.ac.uk
 ###### Description ######
 Processing scripts for running slow, resource-intensive jobs remotely
 (deconvolution, denoising etc.) via a shared filesystem. These OMERO
-scripts write a .json "job definition" file and import results, as they
+scripts write json "job definition" files and import results, as they
 appear, to the same dataset as the input images. The actual processing
 is carried out separately by a daemon that watches the shared FS.
 

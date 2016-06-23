@@ -33,9 +33,10 @@ import omero.cli
 
 
 # name of job definition file, and job parameters
-job_filename = 'core2_decon.job.json'
-results_filename = 'core2_decon.results.json'
-job = {'par.alpha': 5000,
+jobs_filename = 'core2_decon.jobs'
+results_filename = 'core2_decon.results'
+job = {'command': 'core2_decon',
+       'par.alpha': 5000,
        'par.lamf': 0.5,
        'par.niter': 25}
 
@@ -103,12 +104,17 @@ def run():
                 inputs.append({'imageID': iid, 'path': path, 'datasetID': did})
             except RuntimeError as e:
                 print "Fail: " + str(e)
-        job['inputs'] = inputs
 
-        # write job definition file
-        job_filepath = os.path.join(tempdir, job_filename)
-        with open(job_filepath, 'w') as f:
-            json.dump(job, f, indent=4, sort_keys=True)
+        jobs = []
+        for inp in inputs:
+            command = dict(job)  # copy
+            command['inputs'] = [inp]  # only 1 input image for this job
+            jobs.append(json.dumps([command]))  # only 1 command for this job
+        # N.B. '.jobs' file format more flexible than needed here
+        # write jobs definition file (1 line json string per job)
+        jobs_filepath = os.path.join(tempdir, jobs_filename)
+        with open(jobs_filepath, 'w') as f:
+            f.writelines(["%s\n" % j for j in jobs])
 
         # poll filesystem, checking for results
         client.enableKeepAlive(KEEPALIVE_PULSE)
@@ -140,7 +146,7 @@ def mktempdir(user, temp):
     timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
     tempdir = os.path.join(temp, user + "_" + timestamp)
     if not os.path.exists(tempdir):
-        os.makedirs(tempdir)
+        os.mkdir(tempdir)
     return tempdir
 
 
@@ -172,12 +178,11 @@ def import_results(results, user, group, sid, conn):
     """
     Import new results, print errors, return number of attempted imports
 
-    'results' is a list of json strings for dicts with keys:
+    'results' is a list of json strings representing dicts with keys:
         inputID: input Image ID
         fail: string with error message for failed processing job
         datasetID: dataset ID for this result (same as input image)
-        result: path to result to be uploaded as image file
-        attachments: list of file paths to be attached to result
+        results: 1st path uploaded as image file, all others attached
     """
     for result in results:
         try:
@@ -189,10 +194,11 @@ def import_results(results, user, group, sid, conn):
                 cli.loadplugins()
                 import_args = ["import", "-s", HOST, "-k", "%s" % sid]
                 import_args += ["-d", str(r['datasetID'])]
-                result_dir = os.path.split(r['result'])[0]
+                result_dir = os.path.split(r['results'][0])[0]
                 plog = os.path.join(result_dir, "imports.log")
                 perr = os.path.join(result_dir, "imports.err")
-                import_args += ["---errs", perr, "---file", plog, r['result']]
+                result_image = r['results'][0]
+                import_args += ["---errs", perr, "---file", plog, result_image]
                 cli.invoke(import_args, strict=True)
                 with open(plog, 'r') as flog:
                     pix = int(flog.readlines()[0].rstrip())  # Pixels ID
@@ -200,8 +206,9 @@ def import_results(results, user, group, sid, conn):
                 img = conn.getObject("Image", oid=iid)
                 description = "ER decon result from Image ID: %s" % r['inputID']
                 img.setDescription(description)
-                if 'attachments' in r:
-                    for attachment in r['attachments']:
+                # attach remaining results
+                if len(r['results']) > 1:
+                    for attachment in r['results'][1:]:
                         # TODO: if attachment path unicode, str() not robust
                         fann = conn.createFileAnnfromLocalFile(str(attachment))
                         img.linkAnnotation(fann)
