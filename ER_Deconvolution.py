@@ -124,6 +124,7 @@ def run():
         import_count = 0  # ensure we only attempt to import each result once
         tstart = time.time()
         while result_count < len(inputs) and (time.time() - tstart) < TIMEOUT:
+            fail(not conn.isConnected(), "Connection lost!")
             time.sleep(RESULTS_POLL_PULSE)
             if os.path.exists(results_filepath):
                 with open(results_filepath, 'r') as fr:
@@ -136,6 +137,8 @@ def run():
                     (TIMEOUT, import_count)
 
     finally:
+        with open("/ngom/info.txt", "w+") as finfo:
+            finfo.write("finally was reached!!!")
         if tempdir is not None and tempdir.startswith(TEMP):
             if os.path.exists(tempdir):
                 shutil.rmtree(tempdir)  # we checked 'tempdir' is sane first!
@@ -205,7 +208,7 @@ def import_results(results, user, group, sid, conn):
                     pix = int(flog.readlines()[0].rstrip())  # Pixels ID
                 iid = conn.getQueryService().get("Pixels", pix).image.id.val
                 img = conn.getObject("Image", oid=iid)
-                description = "ER decon result from Image ID: %s" % r['inputID']
+                description = "ER decon result from Image ID: %s" % r['imageID']
                 img.setDescription(description)
                 # attach remaining results
                 if len(r['results']) > 1:
