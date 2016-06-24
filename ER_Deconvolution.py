@@ -44,7 +44,8 @@ job = {'command': 'core2_decon',
        'par.lamf': 0.5,
        'par.niter': 25}
 
-TEMP = '/ngom/'  # temp data folder (shared with processor/s)
+TEMP = '/Volumes/dif/gball/ngom_test/'
+#TEMP = '/ngom/'  # temp data folder (shared with processor/s)
 KEEPALIVE_PULSE = 300
 RESULTS_POLL_PULSE = 6  # FIXME -- change to 60 after testing!
 TIMEOUT = 360  # FIXME -- increase afer testing!
@@ -111,7 +112,8 @@ def run():
                 path = export_original_dvfile(conn, iid, tempdir)
                 image = conn.getObject("Image", iid)
                 fail(image is None, "No such image, ID=%d" % iid)
-                did = image.getParent().getId()
+                #did = image.getParent().getId()
+                did = image.getDataset().getId()
                 inputs.append({'imageID': iid, 'path': path, 'datasetID': did})
             except RuntimeError as e:
                 print "Fail: " + str(e)
