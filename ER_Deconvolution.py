@@ -134,6 +134,7 @@ def run():
         import_count = 0  # ensure we only attempt to import each result once
         tstart = time.time()
         while result_count < len(inputs) and (time.time() - tstart) < TIMEOUT:
+            fail(not conn.isConnected(), "Connection lost!")
             time.sleep(RESULTS_POLL_PULSE)
             if os.path.exists(results_filepath):
                 with open(results_filepath, 'r') as fr:
@@ -202,7 +203,7 @@ def import_results(results, user, group, sid, conn):
             r = json.loads(result)
             if 'fail' in r:
                 print "ER decon failed for imageID=%s: %s" \
-                    % (r['inputID'], r['fail'])
+                    % (r['imageID'], r['fail'])
             else:
                 cli = omero.cli.CLI()
                 cli.loadplugins()
@@ -218,10 +219,10 @@ def import_results(results, user, group, sid, conn):
                     pix = int(flog.readlines()[0].rstrip())  # Pixels ID
                 iid = conn.getQueryService().get("Pixels", pix).image.id.val
                 img = conn.getObject("Image", oid=iid)
-                descrip = "ER decon result from Image ID: %s" % r['inputID']
+                descrip = "ER decon result from Image ID: %s" % r['imageID']
                 img.setDescription(descrip)
-                # attach remaining results
                 if len(r['results']) > 1:
+                    # attach remaining results
                     for attachment in r['results'][1:]:
                         fann = conn.createFileAnnfromLocalFile(str(attachment))
                         img.linkAnnotation(fann)
