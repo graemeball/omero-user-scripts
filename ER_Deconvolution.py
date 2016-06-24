@@ -44,8 +44,8 @@ job = {'command': 'core2_decon',
        'par.lamf': 0.5,
        'par.niter': 25}
 
-TEMP = '/Volumes/dif/gball/ngom_test/'
-#TEMP = '/ngom/'  # temp data folder (shared with processor/s)
+#TEMP = '/Volumes/dif/gball/ngom_test/'
+TEMP = '/ngom/'  # temp data folder (shared with processor/s)
 KEEPALIVE_PULSE = 300
 RESULTS_POLL_PULSE = 6  # FIXME -- change to 60 after testing!
 TIMEOUT = 360  # FIXME -- increase afer testing!
@@ -204,8 +204,8 @@ def import_results(results, user, group, sid, conn):
         try:
             r = json.loads(result)
             if 'fail' in r:
-                print "ER decon failed for imageID=%s: %s" \
-                    % (r['imageID'], r['fail'])
+                print "ER decon failed for imageID=%s: %s" % \
+                    (r['inputs'][0]['imageID'], r['fail'])
             else:
                 cli = omero.cli.CLI()
                 cli.loadplugins()
