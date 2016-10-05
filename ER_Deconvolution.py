@@ -113,8 +113,8 @@ def run():
                 path = export_original_dvfile(conn, iid, tempdir)
                 image = conn.getObject("Image", iid)
                 fail(image is None, "No such image, ID=%d" % iid)
-                #did = image.getParent().getId()
-                did = image.getDataset().getId()
+                did = image.getParent().getId()
+                #did = image.getDataset().getId()
                 inputs.append({'imageID': iid, 'path': path, 'datasetID': did})
             except RuntimeError as e:
                 print "Fail: " + str(e)
@@ -199,22 +199,26 @@ def import_results(results, user, group, sid, conn):
     Import new results, print errors, return number of attempted imports
 
     'results' is a list of json strings representing dicts with keys:
-        inputID: input Image ID
+        inputs: list of dicts including, one per job input image including,
+                inputID: input Image ID
+                datasetID: dataset ID for this result (same as input image)
         fail: string with error message for failed processing job
-        datasetID: dataset ID for this result (same as input image)
         results: 1st path uploaded as image file, all others attached
     """
     for result in results:
         try:
             r = json.loads(result)
+            # use imageID & datasetID of 1st input image
+            image_id = r['inputs'][0]['imageID']
+            dataset_id = r['inputs'][0]['datasetID']
             if 'fail' in r:
                 print "ER decon failed for imageID=%s: %s" % \
-                    (r['inputs'][0]['imageID'], r['fail'])
+                    (image_id, r['fail'])
             else:
                 cli = omero.cli.CLI()
                 cli.loadplugins()
                 import_args = ["import", "-s", HOST, "-k", "%s" % sid]
-                import_args += ["-d", str(r['datasetID'])]
+                import_args += ["-d", str(dataset_id)]
                 result_dir = os.path.split(r['results'][0])[0]
                 plog = os.path.join(result_dir, "imports.log")
                 perr = os.path.join(result_dir, "imports.err")
@@ -225,7 +229,7 @@ def import_results(results, user, group, sid, conn):
                     pix = int(flog.readlines()[0].rstrip())  # Pixels ID
                 iid = conn.getQueryService().get("Pixels", pix).image.id.val
                 img = conn.getObject("Image", oid=iid)
-                descrip = "ER decon result from Image ID: %s" % r['imageID']
+                descrip = "ER decon result from Image ID: %s" % image_id
                 img.setDescription(descrip)
                 if len(r['results']) > 1:
                     # attach remaining results
