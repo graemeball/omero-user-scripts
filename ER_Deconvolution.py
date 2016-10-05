@@ -38,6 +38,7 @@ import omero.cli
 
 # name of job definition file, and job parameters
 jobs_filename = 'core2_decon.jobs'
+alive_check_filename = 'lastalive.txt'  # to allow remote cleanup if killed
 results_filename = 'core2_decon.results'
 job = {'command': 'core2_decon',
        'par.alpha': 5000,
@@ -137,6 +138,9 @@ def run():
         tstart = time.time()
         while result_count < len(inputs) and (time.time() - tstart) < TIMEOUT:
             fail(not conn.isConnected(), "Connection lost!")
+            alive_filepath = os.path.join(tempdir, alive_check_filename)
+            with open(alive_filepath, 'w') as f:
+                f.write("%f\n%d" % (time.time(), RESULTS_POLL_PULSE))
             time.sleep(RESULTS_POLL_PULSE)
             if os.path.exists(results_filepath):
                 with open(results_filepath, 'r') as fr:
