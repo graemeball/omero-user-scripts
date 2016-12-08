@@ -47,9 +47,9 @@ job = {'command': 'core2_decon',
 
 #TEMP = '/Volumes/dif/gball/ngom_test/'
 TEMP = '/ngom/'  # temp data folder (shared with processor/s)
-KEEPALIVE_PULSE = 300
-RESULTS_POLL_PULSE = 6  # FIXME -- change to 60 after testing!
-TIMEOUT = 360  # FIXME -- increase afer testing!
+KEEPALIVE_PULSE = 300  # prevent client session timeout
+RESULTS_POLL_PULSE = 60  # poll FS for results after this many seconds
+TIMEOUT = 3600  # job times out after this many seconds
 HOST = 'localhost'  # BlitzGateway .host says 'null' :-[
 
 
