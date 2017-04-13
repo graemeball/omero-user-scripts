@@ -43,7 +43,7 @@ results_filename = 'safir_denoise.results'
 job = {'command': 'safir_denoise',
        'par.prad': 1,
        'par.iter': 3,
-       'par.dims': 'xy'}
+       'par.dim': 'xy'}
 PRAD = ['1', '2', '3', '4']
 ITER = ['1', '2', '3', '4', '5', '6']
 DIMS = ['xy', 'xyz', 'xyzt']
